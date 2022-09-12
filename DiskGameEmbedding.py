@@ -16,12 +16,10 @@ class DiscGameEmbed:
     machine_epsilon = np.finfo(float).eps
 
     # user defined integrating method for omega omega
-    integrating_method_oo = []
-    integrating_name_oo = []
+    integrating_method_oo = {}
 
     # user defined integrating method for omega
-    integrating_method_o = []
-    integrating_name_o = []
+    integrating_method_o = {}
 
     # decorator for integration
     @staticmethod
@@ -45,13 +43,11 @@ class DiscGameEmbed:
     # static method
     @staticmethod
     def AddIntegrationOmeOme(f, name):
-        DiscGameEmbed.integrating_method_oo.append(f)
-        DiscGameEmbed.integrating_name_oo.append(name)
+        DiscGameEmbed.integrating_method_oo[name] = f
 
     @staticmethod
     def AddIntegrationOme(f, name):
-        DiscGameEmbed.integrating_method.append(f)
-        DiscGameEmbed.integrating_name.append(name)
+        DiscGameEmbed.integrating_method_o[name] = f
 
     # inner product
     @staticmethod
@@ -61,19 +57,17 @@ class DiscGameEmbed:
         # can define other integration method: e.g empirical measure/ normal, user defined measure etc
         if method == "empirical":
             return DiscGameEmbed.integrate_omega_empirical(f1, f2, xsample)
-        if method not in DiscGameEmbed.integrating_name_o:
+        if method not in DiscGameEmbed.integrating_method_o:
             raise Exception("Invalid integrating method")
-        idx = DiscGameEmbed.integrating_name_o.index(method)
-        return DiscGameEmbed.integrating_method_o[idx](f1, f2, pi_x, xmin, xmax)
+        return DiscGameEmbed.integrating_method_o[method](f1, f2, pi_x, xmin, xmax)
 
     @staticmethod
     def inner_product_omega_omega(f, f1, f2, pi_x, xmin, xmax, method="quad"):
         if method == "quad":
             return DiscGameEmbed.integrate_omega_omega_quad(f, f1, f2, pi_x, xmin, xmax)
-        if method not in DiscGameEmbed.integrating_name_oo:
+        if method not in DiscGameEmbed.integrating_method_oo:
             raise Exception("Invalid integrating method")
-        idx = DiscGameEmbed.integrating_name_oo.index(method)
-        return DiscGameEmbed.integrating_method_oo[idx](f, f1, f2, pi_x, xmin, xmax)
+        return DiscGameEmbed.integrating_method_oo[method](f, f1, f2, pi_x, xmin, xmax)
 
     # numerical integration
     @staticmethod
@@ -134,7 +128,7 @@ class DiscGameEmbed:
     # sample should be of sorted of increasing value
     # f_sample is the matrix of samples f(xi, xj). It should be arranged by sorting xi, xj respectively.
     def __init__(
-        self, basis_list, measure, f=0, xmin=0, xmax=0, pi_x=0, sample=0, f_sample=0
+        self, basis_list, measure, f=0, xmin=0, xmax=0, pi_x=0, sample=[0], f_sample=0
     ):
         #'set of orginal basis
         #'@ param basis set of orginal basis
@@ -201,8 +195,6 @@ class DiscGameEmbed:
                 )
                 row_idx_v.append(i)
 
-        return
-
     def UpdateProjection(self):
         n = len(self.basis)
         B = np.zeros((n, n))
@@ -226,9 +218,8 @@ class DiscGameEmbed:
         self.projection = self.gram_coef @ B @ self.gram_coef.T
         if self.projection.shape[0] % 2 == 1:
             np.pad(
-                self.projection, [(0, 1), (0, 1)], mode="constant", constant_values=0
+                self.projection, ((0, 1), (0, 1)), mode="constant", constant_values=0
             )
-        return
 
     def UpdateEmbedding(self):
 
@@ -273,13 +264,10 @@ class DiscGameEmbed:
             y = DiscGameEmbed.function_sum(self.basis, self.embed_coef[2 * i + 1])
             self.discgame_embedding.append((x, y))
 
-        return
-
     def SolveEmbedding(self):
         self.GramSchmidt()
         self.UpdateProjection()
         self.UpdateEmbedding()
-        return
 
     def EvaluateDiscGame(self, i, x, y):
         if i > self.rank:
