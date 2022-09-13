@@ -1,5 +1,5 @@
 import math
-from main.DiskGameEmbedding import DiscGameEmbed
+from main.embedding import DiscGameEmbed
 
 
 def f(x, y):

@@ -1,11 +1,5 @@
-# -*- coding: utf-8 -*-
-"""
-
-@author: patrick
-"""
-
 import numpy as np
-from main.DiskGameEmbedding import DiscGameEmbed
+from main.embedding import DiscGameEmbed
 
 
 def f(x, y):

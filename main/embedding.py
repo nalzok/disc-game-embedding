@@ -1,122 +1,20 @@
 import math
 import numpy as np
 import scipy.linalg as la
-import scipy.integrate as integrate
+
+from .integration import (
+    inner_product_omega,
+    inner_product_omega_omega,
+    function_sum,
+    function_scale,
+)
+
+
+# if abs(x) < machine_epsilon, x = 0
+machine_epsilon = np.finfo(float).eps
 
 
 class DiscGameEmbed:
-    # if abs(x) < machine_epsilon, x = 0
-    machine_epsilon = np.finfo(float).eps
-
-    # user defined integrating method for omega omega
-    integrating_method_oo = {}
-
-    # user defined integrating method for omega
-    integrating_method_o = {}
-
-    # decorator for integration
-    @staticmethod
-    def decorator_omega(f1, f2, pi_x):
-        def wrapper_omega(*args):
-            x = np.array(args)
-            return f1(x) * f2(x) * pi_x(x)
-
-        return wrapper_omega
-
-    @staticmethod
-    def decorator_omega_omega(f, f1, f2, pi_x):
-        def wrapper_omega_omega(*args):
-            n = len(args) // 2
-            x = np.array(args[0:n])
-            y = np.array(args[n : 2 * n])
-            return f(x, y) * f1(x) * f2(y) * pi_x(x) * pi_x(y)
-
-        return wrapper_omega_omega
-
-    # static method
-    @staticmethod
-    def AddIntegrationOmeOme(f, name):
-        DiscGameEmbed.integrating_method_oo[name] = f
-
-    @staticmethod
-    def AddIntegrationOme(f, name):
-        DiscGameEmbed.integrating_method_o[name] = f
-
-    # inner product
-    @staticmethod
-    def inner_product_omega(f1, f2, pi_x, xmin, xmax, xsample, method):
-        if method == "quad":
-            return DiscGameEmbed.integrate_omega_quad(f1, f2, pi_x, xmin, xmax)
-        # can define other integration method: e.g empirical measure/ normal, user defined measure etc
-        if method == "empirical":
-            return DiscGameEmbed.integrate_omega_empirical(f1, f2, xsample)
-        if method not in DiscGameEmbed.integrating_method_o:
-            raise Exception("Invalid integrating method")
-        return DiscGameEmbed.integrating_method_o[method](f1, f2, pi_x, xmin, xmax)
-
-    @staticmethod
-    def inner_product_omega_omega(f, f1, f2, pi_x, xmin, xmax, method="quad"):
-        if method == "quad":
-            return DiscGameEmbed.integrate_omega_omega_quad(f, f1, f2, pi_x, xmin, xmax)
-        if method not in DiscGameEmbed.integrating_method_oo:
-            raise Exception("Invalid integrating method")
-        return DiscGameEmbed.integrating_method_oo[method](f, f1, f2, pi_x, xmin, xmax)
-
-    # numerical integration
-    @staticmethod
-    def integrate_omega_quad(f1, f2, pi_x, xmin, xmax):
-        integrand = DiscGameEmbed.decorator_omega(f1, f2, pi_x)
-        int_range = []
-        if type(xmin) == int:
-            int_range = [[xmin, xmax]]
-        else:
-            for i in range(len(xmin)):
-                int_range.append([xmin[i], xmax[i]])
-        return integrate.nquad(integrand, int_range)[0]
-
-    @staticmethod
-    def integrate_omega_omega_quad(f, f1, f2, pi_x, xmin, xmax):
-        integrand = DiscGameEmbed.decorator_omega_omega(f, f1, f2, pi_x)
-        int_range = []
-        if type(xmin) == int:
-            int_range = [[xmin, xmax], [xmin, xmax]]
-        else:
-            ## work twice. 1st time for x, second time for y
-            for i in range(len(xmin)):
-                int_range.append([xmin[i], xmax[i]])
-            for i in range(len(xmin)):
-                int_range.append([xmin[i], xmax[i]])
-
-        I = integrate.nquad(integrand, int_range)[0]
-        return I
-
-    # Empirical measure
-    @staticmethod
-    def integrate_omega_empirical(f1, f2, xsample):
-        n = len(xsample)
-        inner_prod = 0
-        for i in range(n):
-            inner_prod += f1(xsample[i]) * f2(xsample[i])
-        return inner_prod / n
-
-    # function creation
-    @staticmethod
-    def function_sum(f_list, coef_v):
-        def f_sum(x):
-            temp = 0
-            for i in range(len(f_list)):
-                temp += coef_v[i] * f_list[i](x)
-            return temp
-
-        return f_sum
-
-    @staticmethod
-    def function_scale(f, factor):
-        def f_scale(x):
-            return factor * f(x)
-
-        return f_scale
-
     # constructor
     # sample should be of sorted of increasing value
     # f_sample is the matrix of samples f(xi, xj). It should be arranged by sorting xi, xj respectively.
@@ -157,7 +55,7 @@ class DiscGameEmbed:
             coef_v[i] = 1
             for j in range(len(self.basis_orthogonal)):
                 row_idx = row_idx_v[j]
-                coef = DiscGameEmbed.inner_product_omega(
+                coef = inner_product_omega(
                     self.basis[i],
                     self.basis_orthogonal[j],
                     self.pi_x,
@@ -168,9 +66,9 @@ class DiscGameEmbed:
                 )
                 coef_v -= coef * self.gram_coef[row_idx]
             # create the orthogonal basis
-            ortho_basis = DiscGameEmbed.function_sum(self.basis, coef_v)
+            ortho_basis = function_sum(self.basis, coef_v)
             # check linear independce
-            norm = DiscGameEmbed.inner_product_omega(
+            norm = inner_product_omega(
                 ortho_basis,
                 ortho_basis,
                 self.pi_x,
@@ -181,11 +79,9 @@ class DiscGameEmbed:
             )
             norm = math.sqrt(norm)
 
-            if norm > DiscGameEmbed.machine_epsilon:
+            if norm > machine_epsilon:
                 self.gram_coef = np.vstack((self.gram_coef, 1 / norm * coef_v))
-                self.basis_orthogonal.append(
-                    DiscGameEmbed.function_scale(ortho_basis, 1 / norm)
-                )
+                self.basis_orthogonal.append(function_scale(ortho_basis, 1 / norm))
                 row_idx_v.append(i)
 
     def UpdateProjection(self):
@@ -194,7 +90,7 @@ class DiscGameEmbed:
         if self.method == "quad":
             for i in range(n):
                 for j in range(n):
-                    B[i][j] = DiscGameEmbed.inner_product_omega_omega(
+                    B[i][j] = inner_product_omega_omega(
                         self.f,
                         self.basis[i],
                         self.basis[j],
@@ -222,7 +118,7 @@ class DiscGameEmbed:
         # get lambda and drop 0 eigenvalues
         for i in range(T.shape[0] // 2):
             eigen[i] = T[2 * i, 2 * i + 1]
-        eigen = eigen[abs(eigen) > DiscGameEmbed.machine_epsilon * T.shape[0]]
+        eigen = eigen[abs(eigen) > machine_epsilon * T.shape[0]]
 
         # update rank
         self.rank = len(eigen)
@@ -253,8 +149,8 @@ class DiscGameEmbed:
 
         # create embedding functions
         for i in range(self.rank):
-            x = DiscGameEmbed.function_sum(self.basis, self.embed_coef[2 * i])
-            y = DiscGameEmbed.function_sum(self.basis, self.embed_coef[2 * i + 1])
+            x = function_sum(self.basis, self.embed_coef[2 * i])
+            y = function_sum(self.basis, self.embed_coef[2 * i + 1])
             self.discgame_embedding.append((x, y))
 
     def SolveEmbedding(self):

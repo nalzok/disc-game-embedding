@@ -1,4 +1,4 @@
-from main.DiskGameEmbedding import DiscGameEmbed
+from main.embedding import DiscGameEmbed
 
 
 def poly(order):
@@ -33,6 +33,7 @@ Game1.UpdateProjection()
 Game1.UpdateEmbedding()
 
 X = Game1.EvaluateDiscGame(0, 0.5, 0.3)
-print(Game1.embed_coef)
+for (x, y) in [(0.5, 0.5), (0.123, 0.456)]:
+    print(f"f(x, y) - f_hat(x, y) =", f(x, y) - Game1.EvalSumDiscGame(2, x, y))
 
 # polynomial okay
