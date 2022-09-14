@@ -1,54 +1,56 @@
+from typing import Sequence, Union, cast
 import math
 import numpy as np
 import scipy.linalg as la
 
 from .integration import (
+    UnaryCallable,
+    BinaryCallable,
+    FunctionalSupport,
+    FunctionalInput,
+    EmpiricalSupport,
+    EmpiricalInput,
     inner_product_omega,
     inner_product_omega_omega,
     function_sum,
     function_scale,
 )
 
-
-# if abs(x) < machine_epsilon, x = 0
-machine_epsilon = np.finfo(float).eps
-
-
 class DiscGameEmbed:
     # constructor
     # sample should be of sorted of increasing value
     # f_sample is the matrix of samples f(xi, xj). It should be arranged by sorting xi, xj respectively.
     def __init__(
-        self, basis_list, measure, f=0, xmin=0, xmax=0, pi_x=0, sample=[0], f_sample=0
+            self,
+            payout: Union[FunctionalInput, EmpiricalInput],
+            basis: Sequence[UnaryCallable],
     ):
-        #'set of orginal basis
-        #'@ param basis set of orginal basis
-        self.basis = basis_list
-        self.f = f
-        self.xmin = xmin
-        self.xmax = xmax
-        self.pi_x = pi_x
-        self.basis_orthogonal = []
-        self.gram_coef = np.empty(shape=(0, len(basis_list)))
-        self.projection = np.empty(shape=(0, 0))
-        self.discgame_embedding = []
-        self.rank = 0
-        self.embed_coef = np.empty(shape=(0, 0))
-        self.embed_coef_ortho = np.empty(shape=(0, 0))
-        self.v_lambda = np.empty(shape=(0, 0))
-        self.method = measure
-        self.sample = sample
-        self.f_sample = f_sample
+        self.basis = basis
 
-    # GramSchmidth
+        # if abs(x) < machine_epsilon, x = 0
+        self.epsilon = np.finfo(float).eps
+
+        if isinstance(payout, FunctionalInput):
+            self.method = 'quad'
+            self.f = payout.f
+            self.support = payout.support
+        elif isinstance(payout, EmpiricalInput):
+            self.method = 'empirical'
+            self.f = payout.f
+            self.support = payout.support
+            assert self.f.size == self.support.sample.size * (self.support.sample.size - 1) / 2
+        else:
+            raise ValueError(f'Unknown payout specification {type(payout)}')
+
+    # Gram Schmidt
     # update basis_orthorgonal and gram_coef
     # gram_coef: row i = basis_orthogonal[i]'s coef
     def GramSchmidt(self):
-        if len(self.basis) == 0:
-            raise Exception("There should be at least 1 function basis ")
-        self.basis_orthogonal = []
-        self.gram_coef = np.empty(shape=(0, len(self.basis)))
         n = len(self.basis)
+        if n == 0:
+            raise Exception("There should be at least 1 basis function")
+        self.basis_orthogonal = []
+        self.gram_coef = np.empty((n, n))
         row_idx_v = []
         for i in range(n):
             coef_v = np.zeros(n)
@@ -58,11 +60,7 @@ class DiscGameEmbed:
                 coef = inner_product_omega(
                     self.basis[i],
                     self.basis_orthogonal[j],
-                    self.pi_x,
-                    self.xmin,
-                    self.xmax,
-                    self.sample,
-                    self.method,
+                    self.support,
                 )
                 coef_v -= coef * self.gram_coef[row_idx]
             # create the orthogonal basis
@@ -71,39 +69,39 @@ class DiscGameEmbed:
             norm = inner_product_omega(
                 ortho_basis,
                 ortho_basis,
-                self.pi_x,
-                self.xmin,
-                self.xmax,
-                self.sample,
-                self.method,
+                self.support,
             )
             norm = math.sqrt(norm)
 
-            if norm > machine_epsilon:
-                self.gram_coef = np.vstack((self.gram_coef, 1 / norm * coef_v))
+            if norm > self.epsilon:
+                self.gram_coef[i] = coef_v / norm
                 self.basis_orthogonal.append(function_scale(ortho_basis, 1 / norm))
                 row_idx_v.append(i)
 
     def UpdateProjection(self):
         n = len(self.basis)
         B = np.zeros((n, n))
-        if self.method == "quad":
+        if isinstance(self.support, FunctionalSupport):
+            self.f = cast(BinaryCallable, self.f)
             for i in range(n):
                 for j in range(n):
                     B[i][j] = inner_product_omega_omega(
                         self.f,
                         self.basis[i],
                         self.basis[j],
-                        self.pi_x,
-                        self.xmin,
-                        self.xmax,
+                        self.support,
                     )
-        if self.method == "empirical":
-            C = np.zeros((len(self.sample), len(self.basis)))
-            for i in range(len(self.sample)):
-                for j in range(len(self.basis)):
-                    C[i][j] = self.basis[j](self.sample[i])
-            B = 1 / ((len(self.sample)) ** 2) * C.T @ self.f_sample @ C
+        elif isinstance(self.support, EmpiricalSupport):
+            assert isinstance(self.f, np.ndarray)
+            m = len(self.support.sample)
+            C = np.zeros((m, n))
+            for i in range(m):
+                for j in range(n):
+                    C[i][j] = self.basis[j](self.support.sample[i])
+            B = C.T @ self.f @ C / (m**2)
+        else:
+            raise ValueError(f'Unknown support specification {type(self.support)}')
+
         self.projection = self.gram_coef @ B @ self.gram_coef.T
         if self.projection.shape[0] % 2 == 1:
             np.pad(
@@ -111,14 +109,13 @@ class DiscGameEmbed:
             )
 
     def UpdateEmbedding(self):
-
         # Schur decomp
         T, Q = la.schur(self.projection)
         eigen = np.zeros(T.shape[0] // 2)
         # get lambda and drop 0 eigenvalues
         for i in range(T.shape[0] // 2):
             eigen[i] = T[2 * i, 2 * i + 1]
-        eigen = eigen[abs(eigen) > machine_epsilon * T.shape[0]]
+        eigen = eigen[abs(eigen) > self.epsilon * T.shape[0]]
 
         # update rank
         self.rank = len(eigen)
@@ -148,6 +145,7 @@ class DiscGameEmbed:
         self.embed_coef = self.embed_coef_ortho @ self.gram_coef
 
         # create embedding functions
+        self.discgame_embedding = []
         for i in range(self.rank):
             x = function_sum(self.basis, self.embed_coef[2 * i])
             y = function_sum(self.basis, self.embed_coef[2 * i + 1])

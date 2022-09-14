@@ -1,5 +1,38 @@
+from typing import Callable, Union
+from dataclasses import dataclass
 import numpy as np
 import scipy.integrate as integrate
+
+
+UnaryCallable = Callable[[np.ndarray], np.ndarray]
+BinaryCallable = Callable[[np.ndarray, np.ndarray], np.ndarray]
+
+
+@dataclass
+class FunctionalSupport:
+    pi_x: UnaryCallable
+    xmin: np.ndarray
+    xmax: np.ndarray
+
+
+@dataclass
+class FunctionalInput:
+    f: BinaryCallable
+    support: FunctionalSupport
+
+
+@dataclass
+class EmpiricalSupport:
+    sample: np.ndarray
+
+
+@dataclass
+class EmpiricalInput:
+    f: np.ndarray
+    support: EmpiricalSupport
+
+
+Support = Union[FunctionalSupport, EmpiricalSupport]
 
 
 # decorator for integration
@@ -22,48 +55,44 @@ def decorator_omega_omega(f, f1, f2, pi_x):
 
 
 # inner product
-def inner_product_omega(f1, f2, pi_x, xmin, xmax, xsample, method):
-    if method == "quad":
-        return integrate_omega_quad(f1, f2, pi_x, xmin, xmax)
+def inner_product_omega(f1: UnaryCallable, f2: UnaryCallable, support: Support):
+    if isinstance(support, FunctionalSupport):
+        return integrate_omega_quad(f1, f2, support.pi_x, support.xmin, support.xmax)
     # can define other integration method: e.g empirical measure/ normal, user defined measure etc
-    elif method == "empirical":
-        return integrate_omega_empirical(f1, f2, xsample)
+    elif isinstance(support, EmpiricalSupport):
+        return integrate_omega_empirical(f1, f2, support.sample)
     else:
-        raise Exception("Invalid integrating method")
+        raise ValueError('Invalid integrating method')
 
 
-def inner_product_omega_omega(f, f1, f2, pi_x, xmin, xmax, method="quad"):
-    if method == "quad":
-        return integrate_omega_omega_quad(f, f1, f2, pi_x, xmin, xmax)
+def inner_product_omega_omega(f: BinaryCallable, f1: UnaryCallable, f2: UnaryCallable, support: Support):
+    if isinstance(support, FunctionalSupport):
+        return integrate_omega_omega_quad(f, f1, f2, support.pi_x, support.xmin, support.xmax)
     else:
-        raise Exception("Invalid integrating method")
+        raise ValueError('Invalid integrating method')
 
 
 # numerical integration
 def integrate_omega_quad(f1, f2, pi_x, xmin, xmax):
     integrand = decorator_omega(f1, f2, pi_x)
     int_range = []
-    if type(xmin) == int:
-        int_range = [[xmin, xmax]]
-    else:
-        for i in range(len(xmin)):
-            int_range.append([xmin[i], xmax[i]])
-    return integrate.nquad(integrand, int_range)[0]
+    for min_, max_ in zip(xmin, xmax):
+        int_range.append((min_, max_))
+
+    I, _ = integrate.nquad(integrand, int_range)
+    return I
 
 
 def integrate_omega_omega_quad(f, f1, f2, pi_x, xmin, xmax):
     integrand = decorator_omega_omega(f, f1, f2, pi_x)
     int_range = []
-    if type(xmin) == int:
-        int_range = [[xmin, xmax], [xmin, xmax]]
-    else:
-        ## work twice. 1st time for x, second time for y
-        for i in range(len(xmin)):
-            int_range.append([xmin[i], xmax[i]])
-        for i in range(len(xmin)):
-            int_range.append([xmin[i], xmax[i]])
+    ## work twice. 1st time for x, second time for y
+    for min_, max_ in zip(xmin, xmax):
+        int_range.append((min_, max_))
+    for min_, max_ in zip(xmin, xmax):
+        int_range.append((min_, max_))
 
-    I = integrate.nquad(integrand, int_range)[0]
+    I, _ = integrate.nquad(integrand, int_range)
     return I
 
 
@@ -78,11 +107,11 @@ def integrate_omega_empirical(f1, f2, xsample):
 
 # function creation
 def function_sum(f_list, coef_v):
-    def f_sum(x):
-        temp = 0
-        for i in range(len(f_list)):
-            temp += coef_v[i] * f_list[i](x)
-        return temp
+    def f_sum(x: np.ndarray) -> np.ndarray:
+        total = coef_v[0] * f_list[0](x)
+        for f, v in zip(f_list[1:], coef_v[1:]):
+            total += v * f(x)
+        return total
 
     return f_sum
 

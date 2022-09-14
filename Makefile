@@ -1,6 +1,6 @@
 .PHONY: test
 
 test:
-	pipenv run python3 -m test.game1
-	pipenv run python3 -m test.game2
-	pipenv run python3 -m test.game3
+	# pipenv run python3 -m test.test_poly
+	# pipenv run python3 -m test.test_trig
+	pipenv run python3 -m test.test_3d
