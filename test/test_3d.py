@@ -8,24 +8,28 @@ def constant(x):
 
 
 def b1(x):
-    return x[0]**2
+    return x[0] ** 2
 
 
 def b2(x):
-    return x[1]**2
+    return x[1] ** 2
 
 
 def b3(x):
-    return x[2]**2
+    return x[2] ** 2
+
 
 basis = [constant, b1, b2]
+
 
 def g(x, y):
     ## add x^T Z y for some skew symmetric matrix Z
     return np.sum(x**2) - np.sum(y**2)
 
+
 xmin = np.array([0, 0, 0])
 xmax = np.array([1, 1, 1])
+
 
 def pi(x):
     return np.array(1)

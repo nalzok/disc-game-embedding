@@ -16,14 +16,15 @@ from .integration import (
     function_scale,
 )
 
+
 class DiscGameEmbed:
     # constructor
     # sample should be of sorted of increasing value
     # f_sample is the matrix of samples f(xi, xj). It should be arranged by sorting xi, xj respectively.
     def __init__(
-            self,
-            payout: Union[FunctionalInput, EmpiricalInput],
-            basis: Sequence[UnaryCallable],
+        self,
+        payout: Union[FunctionalInput, EmpiricalInput],
+        basis: Sequence[UnaryCallable],
     ):
         self.basis = basis
 
@@ -31,16 +32,19 @@ class DiscGameEmbed:
         self.epsilon = np.finfo(float).eps
 
         if isinstance(payout, FunctionalInput):
-            self.method = 'quad'
+            self.method = "quad"
             self.f = payout.f
             self.support = payout.support
         elif isinstance(payout, EmpiricalInput):
-            self.method = 'empirical'
+            self.method = "empirical"
             self.f = payout.f
             self.support = payout.support
-            assert self.f.size == self.support.sample.size * (self.support.sample.size - 1) / 2
+            assert (
+                self.f.size
+                == self.support.sample.size * (self.support.sample.size - 1) / 2
+            )
         else:
-            raise ValueError(f'Unknown payout specification {type(payout)}')
+            raise ValueError(f"Unknown payout specification {type(payout)}")
 
     # Gram Schmidt
     # update basis_orthorgonal and gram_coef
@@ -100,7 +104,7 @@ class DiscGameEmbed:
                     C[i][j] = self.basis[j](self.support.sample[i])
             B = C.T @ self.f @ C / (m**2)
         else:
-            raise ValueError(f'Unknown support specification {type(self.support)}')
+            raise ValueError(f"Unknown support specification {type(self.support)}")
 
         self.projection = self.gram_coef @ B @ self.gram_coef.T
         if self.projection.shape[0] % 2 == 1:

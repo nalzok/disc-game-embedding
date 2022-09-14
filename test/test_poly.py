@@ -8,6 +8,7 @@ def poly(order):
 
     return x_n
 
+
 basis = []
 order = 5
 for i in range(order):
@@ -25,6 +26,7 @@ xmax = np.array([1])
 
 def pi(x):
     return np.array(1)
+
 
 support = FunctionalSupport(pi, xmin, xmax)
 payoff = FunctionalInput(f, support)

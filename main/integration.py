@@ -62,14 +62,18 @@ def inner_product_omega(f1: UnaryCallable, f2: UnaryCallable, support: Support):
     elif isinstance(support, EmpiricalSupport):
         return integrate_omega_empirical(f1, f2, support.sample)
     else:
-        raise ValueError('Invalid integrating method')
+        raise ValueError("Invalid integrating method")
 
 
-def inner_product_omega_omega(f: BinaryCallable, f1: UnaryCallable, f2: UnaryCallable, support: Support):
+def inner_product_omega_omega(
+    f: BinaryCallable, f1: UnaryCallable, f2: UnaryCallable, support: Support
+):
     if isinstance(support, FunctionalSupport):
-        return integrate_omega_omega_quad(f, f1, f2, support.pi_x, support.xmin, support.xmax)
+        return integrate_omega_omega_quad(
+            f, f1, f2, support.pi_x, support.xmin, support.xmax
+        )
     else:
-        raise ValueError('Invalid integrating method')
+        raise ValueError("Invalid integrating method")
 
 
 # numerical integration

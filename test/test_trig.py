@@ -8,11 +8,14 @@ basis = [np.sin, np.cos]
 def g(x, y):
     return np.sin(x) * np.cos(y) - np.sin(y) * np.cos(x)
 
+
 xmin = np.array([0])
 xmax = np.array([1])
 
+
 def pi(x):
     return np.array(1)
+
 
 support = FunctionalSupport(pi, xmin, xmax)
 payoff = FunctionalInput(g, support)
