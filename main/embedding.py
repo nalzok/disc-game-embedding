@@ -69,7 +69,7 @@ class DiscGameEmbed:
                 coef_v -= coef * self.gram_coef[row_idx]
             # create the orthogonal basis
             ortho_basis = function_sum(self.basis, coef_v)
-            # check linear independce
+            # check linear independence
             norm = inner_product_omega(
                 ortho_basis,
                 ortho_basis,

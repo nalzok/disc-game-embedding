@@ -90,9 +90,10 @@ def integrate_omega_quad(f1, f2, pi_x, xmin, xmax):
 def integrate_omega_omega_quad(f, f1, f2, pi_x, xmin, xmax):
     integrand = decorator_omega_omega(f, f1, f2, pi_x)
     int_range = []
-    ## work twice. 1st time for x, second time for y
+    ## range for X
     for min_, max_ in zip(xmin, xmax):
         int_range.append((min_, max_))
+    ## range for Y
     for min_, max_ in zip(xmin, xmax):
         int_range.append((min_, max_))
 
