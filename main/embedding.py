@@ -40,8 +40,7 @@ class DiscGameEmbed:
             self.f = payout.f
             self.support = payout.support
             assert (
-                self.f.size
-                == self.support.sample.size * (self.support.sample.size - 1) / 2
+                self.f.shape == (self.support.sample.size, self.support.sample.size)
             )
         else:
             raise ValueError(f"Unknown payout specification {type(payout)}")
@@ -96,7 +95,7 @@ class DiscGameEmbed:
                         self.support,
                     )
         elif isinstance(self.support, EmpiricalSupport):
-            assert isinstance(self.f, np.ndarray)
+            assert isinstance(self.f, np.ndarray) and len(self.f.shape) == 2
             m = len(self.support.sample)
             C = np.zeros((m, n))
             for i in range(m):

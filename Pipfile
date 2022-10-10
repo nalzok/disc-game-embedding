@@ -7,6 +7,7 @@ name = "pypi"
 jax = {extras = ["cpu"], version = "*"}
 numpy = "*"
 scipy = "*"
+flask = "*"
 
 [dev-packages]
 black = "*"
