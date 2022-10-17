@@ -53,7 +53,7 @@ class DiscGameEmbed:
         if n == 0:
             raise Exception("There should be at least 1 basis function")
         self.basis_orthogonal = []
-        self.gram_coef = np.empty((n, n))
+        self.gram_coef = np.zeros((n, n))
         row_idx_v = []
         for i in range(n):
             coef_v = np.zeros(n)
@@ -97,7 +97,7 @@ class DiscGameEmbed:
         elif isinstance(self.support, EmpiricalSupport):
             assert isinstance(self.f, np.ndarray) and len(self.f.shape) == 2
             m = len(self.support.sample)
-            C = np.zeros((m, n))
+            C = np.empty((m, n))
             for i in range(m):
                 for j in range(n):
                     C[i][j] = self.basis[j](self.support.sample[i])
@@ -106,6 +106,7 @@ class DiscGameEmbed:
             raise ValueError(f"Unknown support specification {type(self.support)}")
 
         self.projection = self.gram_coef @ B @ self.gram_coef.T
+
         if self.projection.shape[0] % 2 == 1:
             np.pad(
                 self.projection, ((0, 1), (0, 1)), mode="constant", constant_values=0
@@ -129,22 +130,20 @@ class DiscGameEmbed:
         # update embedding
         sort_idx = np.argsort(np.abs(eigen))
         m_coef = np.zeros(Q.shape)
-        for i in range(len(sort_idx)):
-            idx = sort_idx[i]
-            _lambda = eigen[idx]
-            temp = 0
+        for i, idx in enumerate(sort_idx):
+            lambda_ = eigen[idx]
             # switch the rows if the top right corner of the block diagonal matrix is negative
-            if _lambda < 0:
-                temp = math.sqrt(-1 * _lambda)
+            if lambda_ < 0:
+                temp = math.sqrt(-1 * lambda_)
                 m_coef[2 * i] = temp * Q.T[2 * idx + 1]
                 m_coef[2 * i + 1] = temp * Q.T[2 * idx]
             else:
-                temp = math.sqrt(_lambda)
+                temp = math.sqrt(lambda_)
                 m_coef[2 * i] = temp * Q.T[2 * idx]
                 m_coef[2 * i + 1] = temp * Q.T[2 * idx + 1]
 
         n = len(self.basis_orthogonal)
-        self.embed_coef_ortho = m_coef[:, 0:n]
+        self.embed_coef_ortho = m_coef[:, :n]
         self.embed_coef = self.embed_coef_ortho @ self.gram_coef
 
         # create embedding functions
@@ -162,7 +161,7 @@ class DiscGameEmbed:
     def EvaluateDiscGame(self, i, x, y):
         if i > self.rank:
             raise Exception(
-                "please enter a proper index of disc games. The index should be less than the rank"
+                f"please enter a proper index of disc games. The index should be less than the rank = {self.rank}"
             )
 
         if i < 0:
@@ -174,7 +173,7 @@ class DiscGameEmbed:
         return f1(x) * f2(y) - f1(y) * f2(x)
 
     def EvalSumDiscGame(self, i, x, y):
-        temp = 0
+        value = 0
         for i in range(i):
-            temp += self.EvaluateDiscGame(i + 1, x, y)
-        return temp
+            value += self.EvaluateDiscGame(i + 1, x, y)
+        return value

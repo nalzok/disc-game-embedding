@@ -6,34 +6,31 @@ from app import app
 from main.embedding import DiscGameEmbed, EmpiricalInput, EmpiricalSupport
 
 
-def poly(order):
-    def x_n(x):
-        return x**order
+def poly_basis(order: int):
+    def poly(i):
+        return lambda x: x**i
 
-    return x_n
-
-
-basis = []
-order = 5
-for i in range(order):
-    basis.append(poly(i))
+    basis = [poly(i) for i in range(order)]
+    return basis
 
 
 @app.route('/api/v1/embed', methods=['GET', 'POST'])
 def embed():
-    # curl -X POST http://127.0.0.1:5000/api/v1/embed -H 'Content-Type: application/json' -d '{"sample": [1, 2, 3], "f": [[0, 1, -1], [-1, 0, 2], [1, -2, 0]], "test": [[1, 2], [2, 3]]}'
     content = request.json
-
     sample = np.array(literal_eval(repr(content["sample"])))
-    f = np.array(literal_eval(repr(content["f"])))
+    M = np.array(literal_eval(repr(content["M"])))
+    order = content["order"]
+    test = literal_eval(repr(content["test"]))
 
     support = EmpiricalSupport(sample)
-    payoff = EmpiricalInput(f, support)
+    payoff = EmpiricalInput(M, support)
+    basis = poly_basis(order)
+
     game = DiscGameEmbed(payoff, basis)
     game.SolveEmbedding()
 
     result = []
-    for (x, y) in literal_eval(repr(content["test"])):
-        result.append(game.EvalSumDiscGame(2, x, y))
+    for x, y in test:
+        result.append(game.EvalSumDiscGame(order // 2, x, y))
 
     return jsonify({"result": result})
