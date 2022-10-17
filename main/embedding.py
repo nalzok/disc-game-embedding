@@ -1,5 +1,4 @@
 from typing import Sequence, Union, cast
-import math
 import numpy as np
 import scipy.linalg as la
 
@@ -40,7 +39,7 @@ class DiscGameEmbed:
             self.f = payout.f
             self.support = payout.support
             assert (
-                self.f.shape == (self.support.sample.size, self.support.sample.size)
+                self.f.shape == (self.support.sample.shape[0], self.support.sample.shape[0])
             )
         else:
             raise ValueError(f"Unknown payout specification {type(payout)}")
@@ -74,7 +73,7 @@ class DiscGameEmbed:
                 ortho_basis,
                 self.support,
             )
-            norm = math.sqrt(norm)
+            norm = np.sqrt(norm)
 
             if norm > self.epsilon:
                 self.gram_coef[i] = coef_v / norm
@@ -134,11 +133,11 @@ class DiscGameEmbed:
             lambda_ = eigen[idx]
             # switch the rows if the top right corner of the block diagonal matrix is negative
             if lambda_ < 0:
-                temp = math.sqrt(-1 * lambda_)
+                temp = np.sqrt(-1 * lambda_)
                 m_coef[2 * i] = temp * Q.T[2 * idx + 1]
                 m_coef[2 * i + 1] = temp * Q.T[2 * idx]
             else:
-                temp = math.sqrt(lambda_)
+                temp = np.sqrt(lambda_)
                 m_coef[2 * i] = temp * Q.T[2 * idx]
                 m_coef[2 * i + 1] = temp * Q.T[2 * idx + 1]
 

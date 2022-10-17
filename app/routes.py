@@ -8,7 +8,7 @@ from main.embedding import DiscGameEmbed, EmpiricalInput, EmpiricalSupport
 
 def poly_basis(order: int):
     def poly(i):
-        return lambda x: x**i
+        return lambda x: np.sum(x**i)
 
     basis = [poly(i) for i in range(order)]
     return basis
@@ -20,7 +20,7 @@ def embed():
     sample = np.array(literal_eval(repr(content["sample"])))
     M = np.array(literal_eval(repr(content["M"])))
     order = content["order"]
-    test = literal_eval(repr(content["test"]))
+    test = np.array(literal_eval(repr(content["test"])))
 
     support = EmpiricalSupport(sample)
     payoff = EmpiricalInput(M, support)
