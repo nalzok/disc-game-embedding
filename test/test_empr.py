@@ -1,5 +1,6 @@
-from main.embedding import DiscGameEmbed, EmpiricalInput, EmpiricalSupport
+from itertools import product
 import numpy as np
+from main.embedding import DiscGameEmbed, EmpiricalInput, EmpiricalSupport
 
 
 def poly(order):
@@ -15,16 +16,24 @@ for i in range(order):
     basis.append(poly(i))
 
 
-xmin = np.array([0])
-xmax = np.array([4])
+@np.vectorize
+def f(x, y):
+    return x**2*y -y**2*x +x**2 -y**2 +x**3*y -y**3*x +x -y
 
-sample = np.array([1, 2, 3])
-f = np.array([[0, 1, -1], [-1, 0, 2], [1, -2, 0]])
+
+n = 10
+rng = np.random.default_rng(42)
+sample = rng.uniform(size=n)
+
+M = f(sample[:, np.newaxis], sample)
 
 support = EmpiricalSupport(sample)
-payoff = EmpiricalInput(f, support)
+payoff = EmpiricalInput(M, support)
 game = DiscGameEmbed(payoff, basis)
 game.SolveEmbedding()
 
-for (x, y) in [(1, 2), (2, 3), (1, 3)]:
-    print("f_hat(x, y) =", game.EvalSumDiscGame(2, x, y))
+max_error = 0
+for x, y in product(sample, repeat=2):
+    max_error = max(max_error, abs(f(x, y) - game.EvalSumDiscGame(order // 2, x, y)))
+
+print(f"{max_error = }")
