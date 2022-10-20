@@ -8,6 +8,7 @@ jax = {extras = ["cpu"], version = "*"}
 numpy = "*"
 scipy = "*"
 flask = "*"
+click = "*"
 
 [dev-packages]
 black = "*"

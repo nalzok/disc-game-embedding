@@ -22,7 +22,7 @@ class DiscGameEmbed:
     # f_sample is the matrix of samples f(xi, xj). It should be arranged by sorting xi, xj respectively.
     def __init__(
         self,
-        payout: Union[FunctionalInput, EmpiricalInput],
+        payoff: Union[FunctionalInput, EmpiricalInput],
         basis: Sequence[UnaryCallable],
     ):
         self.basis = basis
@@ -30,19 +30,19 @@ class DiscGameEmbed:
         # if abs(x) < machine_epsilon, x = 0
         self.epsilon = np.finfo(float).eps
 
-        if isinstance(payout, FunctionalInput):
+        if isinstance(payoff, FunctionalInput):
             self.method = "quad"
-            self.f = payout.f
-            self.support = payout.support
-        elif isinstance(payout, EmpiricalInput):
+            self.f = payoff.f
+            self.support = payoff.support
+        elif isinstance(payoff, EmpiricalInput):
             self.method = "empirical"
-            self.f = payout.f
-            self.support = payout.support
+            self.f = payoff.f
+            self.support = payoff.support
             assert (
                 self.f.shape == (self.support.sample.shape[0], self.support.sample.shape[0])
             )
         else:
-            raise ValueError(f"Unknown payout specification {type(payout)}")
+            raise ValueError(f"Unknown payoff specification {type(payoff)}")
 
     # Gram Schmidt
     # update basis_orthorgonal and gram_coef
@@ -75,7 +75,7 @@ class DiscGameEmbed:
             )
             norm = np.sqrt(norm)
 
-            if norm > self.epsilon:
+            if norm**2 > self.epsilon * len(coef_v):
                 self.gram_coef[i] = coef_v / norm
                 self.basis_orthogonal.append(function_scale(ortho_basis, 1 / norm))
                 row_idx_v.append(i)

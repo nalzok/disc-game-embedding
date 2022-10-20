@@ -23,17 +23,16 @@ def f(x, y):
 
 n = 10
 rng = np.random.default_rng(42)
-sample = rng.uniform(size=n)
+X = rng.uniform(size=n)
+F = f(X[:, np.newaxis], X)
 
-M = f(sample[:, np.newaxis], sample)
-
-support = EmpiricalSupport(sample)
-payoff = EmpiricalInput(M, support)
+support = EmpiricalSupport(X)
+payoff = EmpiricalInput(F, support)
 game = DiscGameEmbed(payoff, basis)
 game.SolveEmbedding()
 
 max_error = 0
-for x, y in product(sample, repeat=2):
+for x, y in product(X, repeat=2):
     max_error = max(max_error, abs(f(x, y) - game.EvalSumDiscGame(order // 2, x, y)))
 
 print(f"{max_error = }")
