@@ -4,15 +4,17 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-jax = {extras = ["cpu"], version = "*"}
 numpy = "*"
 scipy = "*"
 flask = "*"
 click = "*"
+jax = {extras = ["cpu"], version = "*"}
+optax = "*"
 
 [dev-packages]
 black = "*"
 pyinstrument = "*"
+jupyterlab = "*"
 
 [requires]
 python_version = "3.8"
