@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="data:;base64,iVBORw0KGgo=" />
+    <title>Disc Game</title>
+    <style>
+      .bar {
+        fill: #7af;
+      }
+      .dot {
+        fill: #289;
+      }
+    </style>
+    <link rel="stylesheet" href="https://pyscript.net/latest/pyscript.css" />
+    <script defer src="https://pyscript.net/latest/pyscript.js"></script>
+    <py-env>
+      - numpy
+      - matplotlib
+      - paths:
+        - ./data.py
+        - ./test.csv
+    </py-env>
+  </head>
+
+  <body>
+  <div id="allvis"></div>
+  
+
+  <script type="module">
+    import {d3, svgAppend, glob, dataGen} from './util.js';
+    import * as scp from './scatterplot.js';
+
+    // read in data
+    //Promise.all(
+      // more datasets could be added here (like they were in p3)
+      //['test'].map((fn) => d3.csv(`./data/${fn}.csv`))
+    //).then((d) => {
+      // at this point all data has been read in
+      //d.forEach(function(row) {
+        //convertNumbers(row);
+       // row['x'] = +row.x;
+       // row['y'] = +row.y;
+      //});
+      //convertNumbers(d);
+     // doViz(d);
+    //});
+
+    /*Promise.all(
+      ['plot1', 'plot2'].map((fn) => d3.csv(`./data/${fn}.csv`).then((data) => (glob.csvData[fn] = data))))
+    .then(() => {
+      scp.setup();
+      doViz(glob.csvData.plot1data);
+      doViz(glob.csvData.plot2data);
+    });*/
+    //scp.dataProc;
+    //scp.dataProc;
+    //scp.scatLabelPos();
+    //scp.scatMarksInit('scat-marks', glob.csvData.test);
+    //const data = d3.csv('./data/test.csv')
+    //const data = dataGen([0, 10], 10, { randomize: true });
+    //doViz(data);
+    function convertNumbers(row) {
+      var r = {};
+      for (var k in row) {
+        r[k] = +row[k];
+        if (isNaN(r[k])) {
+          r[k] = row[k];
+        }
+      }
+      return r;
+    }
+    
+    /*var loadData = () => { return d3.csv("./data/test.csv")
+            .then( (d) => { 
+                doViz(d);
+            } 
+        )};*/
+
+    var doViz = (data) => {
+    /* Put all code after 'loadData();' here */
+      const dataRange = [d3.min(data, function(d) {return d.y;}), d3.max(data, function(d) {return d.y;})]; // the "val" property of output data will have this range
+      //const dataLen = 10; // the number of values, or, length of the data array
+      //const padding = 0.1; // horizontal padding between marks
+      /* the third argument to dataGen are the optional arguments, including boolean
+      "randomize" controlling whether or not the data to visualize will be random. */
+      /*const data = util.dataGen(dataRange, dataLen, { randomize: true });*/
+      console.log('data = ', data);
+      const margin = { top: 80, left: 80, right: 80, bottom: 80 },
+        width = 600 - margin.left - margin.right,
+        height = 600 - margin.top - margin.bottom;
+
+      const xScale = scp.xScaleGen(data, width);
+      const yScale = scp.yScaleGen(dataRange, height);
+      window.xScale = xScale;
+      const layout = { margin, width, height, xScale, yScale };
+      let svg = svgAppend('dots', layout);
+      
+
+
+      // add the final g
+      var vfield = function(d) {
+          d.vx = d.y;
+          d.vy = -d.x;
+          d.magnitude = Math.sqrt(d.vx*d.vx + d.vy*d.vy);
+      }
+  
+      var grid_spacing = 0.05
+      const pnts = [];
+      for (var i=d3.min(data, function(d) {return d.x;}) + grid_spacing; i <= d3.max(data, function(d) {return d.x;}); i+= grid_spacing){
+          for (var j=dataRange[0] + grid_spacing; j<=dataRange[1]; j+= grid_spacing) {
+              var pt = {x:i, y:j};
+              vfield(pt);
+              pnts.push(pt);
+          }
+      }
+      console.log(pnts)
+      var max_magnitude = pnts.reduce(function (max_, it) {
+            return max_ > it.magnitude ? max_ : it.magnitude; }, 0);
+      console.log(max_magnitude)
+      var vscale = d3.scalePow().domain([0,max_magnitude]).range([0,grid_spacing]);
+      console.log(pnts)
+      pnts.forEach(function(p){
+          // scale down to a unit vector
+          p.vx = p.vx/p.magnitude;
+          p.vy = p.vy/p.magnitude;
+          // scale it again
+          p.vx *= vscale(p.magnitude);
+          p.vy *= vscale(p.magnitude);
+          // vector
+          svg.append("g")
+          .append("path")
+          .attr("d", "M" + xScale(p.x) + " " + yScale(p.y) + " L" + (xScale(p.x - p.vx)) + " " + (yScale(p.y - p.vy)))
+          .attr("stroke", "red")
+          .attr("stroke-width", 1)
+          .attr("fill", "none")
+          //.attr("transform", "translate(" + (xScale(p.x)) + "," + (yScale(p.y)) + ")")
+          ;
+          // pinhead
+          svg.append("g")
+          .append("circle")
+          .attr("r",2)
+          .attr("cx", xScale(p.x))
+          .attr("cy", yScale(p.y))
+          //.attr("transform", "translate(" + (xScale(p.x)) + "," + (yScale(p.y)) + ")")
+          ;
+      })
+      /*var VISUALIZATION_CONFIG = {
+          // This is a simple vector field, so we draw
+          // vectors representing the field along the field lines.
+          type:      "simple vector field",
+          // The id of the canvas we draw into
+          canvas:    "chargeCanvas",
+          scale:     5.0,
+          arrowSize: 1.0,
+          // f is a vector valued function.
+          // In this case the electric field from a single charge.
+          f:  {
+                type: "charge",  charge:  5.0,
+                x: 0.0, y: 0.0, z: 0.0,
+                nfieldLines: 25.0
+              }
+        };*/
+      /*console.log(VISUALIZATION_CONFIG)*/
+      
+      
+      scp.dots(svg, data, layout, 5);//layout.xScale.bandwidth() / 8);
+    };
+    ///\loadData();
+  </script>
+
+  <form>
+    <select name = "axes" id = "axes">
+      <option value = "auto"> Automatic </option>
+      <option value = "fix"> Fixed </option>
+    </select>
+    <button type = "button" id = "btn" value = "submit">Submit</button>
+  </form>
+  <div id = "plot" style="height: 100px;"></p>
+  </body>
+  <py-script>
+    import matplotlib.pyplot as plt
+    import numpy as np
+    from data import openfile 
+    from js import document 
+    from pyodide.ffi import create_proxy  
+
+    choice = Element("axes")
+    op = Element("output")
+
+    def plot(*args, **kwargs):
+      rows, numcol = openfile('./test.csv')
+      numgraphs = int(numcol / 2)
+
+      if (choice.value == "auto"):
+        # different axes
+        fig, axs = plt.subplots(nrows = 1, ncols = numgraphs, figsize=(10, 5))
+        for i in range(numgraphs):
+          ax = axs[i]
+          ax.set_box_aspect(1)
+
+          x = [float(row[(i * 2)]) for row in rows]
+          y = [float(row[(i * 2 + 1)]) for row in rows]
+          allx, ally = np.meshgrid(np.linspace(min(x), max(x), 15), np.linspace(min(y), max(y), 15))
+          u = []
+          v = []
+          for a, b in zip(allx, ally):
+            u.append(-b/np.sqrt(a**2 + b**2))
+            v.append(a/np.sqrt(a**2 + b**2))
+          ax.quiver(allx,ally,u,v, color = 'red', headwidth = 5)
+          ax.scatter(x, y)
+        pyscript.write('plot', fig)
+
+      else:
+        # fixed axes
+        xmin = min([float(row[0]) for row in rows])
+        xmax = max([float(row[0]) for row in rows])
+        ymin = min([float(row[1]) for row in rows])
+        ymax = max([float(row[1]) for row in rows])
+        fig, axs = plt.subplots(nrows = 1, ncols = numgraphs, figsize=(10, 5))
+        for j in range(numgraphs):
+          ax = axs[j]
+          ax.set_box_aspect(1)
+          ax.set_xlim(xmin, xmax)
+          ax.set_ylim(ymin, ymax)
+
+          x = [float(row[j * 2]) for row in rows]
+          y = [float(row[j * 2 + 1]) for row in rows]
+          allx, ally = np.meshgrid(np.linspace(xmin, xmax, 15), np.linspace(ymin, ymax, 15))
+          u = []
+          v = []
+          for a, b in zip(allx, ally):
+            u.append(-b)
+            v.append(a)
+          ax.quiver(allx,ally,u,v, color = 'red', headwidth = 5)
+          ax.scatter(x, y)
+        pyscript.write('plot', fig)
+    
+    function_proxy = create_proxy(plot)
+    document.getElementById("btn").addEventListener("click", function_proxy)
+  </py-script>
+</html>
