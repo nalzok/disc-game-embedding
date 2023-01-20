@@ -1,9 +1,16 @@
-from typing import Optional
 from pathlib import Path
+import json
 
 import numpy as np
 import scipy.linalg as la
 import click
+
+
+class NumpyEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.ndarray):
+            return obj.tolist()
+        return json.JSONEncoder.default(self, obj)
 
 
 def embed(F):
@@ -37,19 +44,29 @@ def embed(F):
 
 @click.command()
 @click.option("--payoff", type=click.Path(exists=True, path_type=Path), required=True)
-@click.option("--features", type=click.Path(exists=True, path_type=Path), required=False)
+@click.option("--features", type=click.Path(exists=True, path_type=Path), required=True)
 @click.option("--embedding", type=click.Path(path_type=Path), required=True)
 @click.option("--eigen", type=click.Path(path_type=Path), required=True)
-def cli(payoff: Path, features: Optional[Path], embedding: Path, eigen: Path):
+def cli(payoff: Path, features: Path, embedding: Path, eigen: Path):
     F = np.load(payoff)
     embedding_, eig = embed(F)
-    if features is not None:
-        X = np.load(features)
-        embedding_ = np.hstack([embedding_, X])
 
     np.save(embedding, embedding_)
     np.save(eigen, eig)
     print(F.shape, embedding_.shape, eig.shape)
+
+    with open(embedding.with_suffix(".json"), "w") as fp:
+        json.dump(embedding_, fp, cls=NumpyEncoder)
+
+    with open(eigen.with_suffix(".json"), "w") as fp:
+        json.dump(eig, fp, cls=NumpyEncoder)
+
+    with open(payoff.with_suffix(".json"), "w") as fp:
+        json.dump(F, fp, cls=NumpyEncoder)
+
+    with open(features.with_suffix(".json"), "w") as fp:
+        X = np.load(features)
+        json.dump(X, fp, cls=NumpyEncoder)
 
 
 if __name__ == "__main__":
