@@ -3,8 +3,9 @@ import * as d3 from "https://cdn.skypack.dev/d3@7";
 import {data} from "./data.js";
 
 // config
-const colorBy = 0
-const firstN = 4
+const scaling = document.getElementById("scaling").value === "auto";
+const colorBy = parseInt(document.getElementById("color_by").value) - 1;
+const firstN = 6
 
 const padding = 28
 const width = 954
@@ -12,11 +13,11 @@ const columns = d3.range(firstN)
 const size = (width - (columns.length + 1) * padding) / columns.length + padding
 
 const x = columns.map(c => d3.scaleLinear()
-    .domain(d3.extent(data, d => d.embedding[2 * c]))
+    .domain(d3.extent(data, d => d.embedding[(2 * c) * scaling]).map(x => 1.2 * x))
     .rangeRound([padding / 2, size - padding / 2]))
 
 const y = columns.map(c => d3.scaleLinear()
-    .domain(d3.extent(data, d => d.embedding[2 * c + 1]))
+    .domain(d3.extent(data, d => d.embedding[(2 * c + 1) * scaling]).map(x => 1.2 * x))
     .rangeRound([size - padding / 2, padding / 2]))
 
 const z = d3.scaleLinear()
@@ -66,7 +67,7 @@ const svg = d3.create("svg")
     .attr("viewBox", [-padding, 0, width, width]);
 
 svg.append("style")
-    .text(`circle.hidden { fill: #000; fill-opacity: 1; r: 1px; }`);
+    .text("circle.hidden { fill: #000; fill-opacity: 1; r: 1px; }");
 
 const cell = svg.append("g")
     .selectAll("g")
@@ -83,16 +84,63 @@ cell.append("rect")
     .attr("height", size - padding);
 
 
+const defs = svg.append("svg:defs")
+
+const marker = defs.selectAll("marker")
+    .data(d3.range(1))
+    .enter()
+    .append("svg:marker")
+    .attr("id", "arrow")
+    .attr("markerHeight", 5)
+    .attr("markerWidth", 5)
+    .attr("markerUnits", "strokeWidth")
+    .attr("orient", "auto")
+    .attr("refX", 0)
+    .attr("refY", 0)
+    .attr("viewBox", "-5 -5 10 10")
+    .append("svg:path")
+    .attr("d", "M 0,0 m -5,-5 L 5,0 L -5,5 Z")
+    .attr("fill", "black");
+
+const clip = defs.selectAll("clip")
+    .data(d3.range(1))
+    .enter()
+    .append("svg:clipPath")
+    .attr("id", "vector-field")
+    .append("svg:rect")
+    .attr("x", padding / 2 + 0.5)
+    .attr("y", padding / 2 + 0.5)
+    .attr("width", size - padding)
+    .attr("height", size - padding);
+
 cell.each(function (i) {
-    d3.select(this).selectAll("circle")
-        .data(d3.range(1, 5))
-        .join("ellipse")
+    // Vector field
+    d3.select(this).selectAll("rect")
+        .data(d3.range(10))
+        .join("ellipse");
+
+    d3.select(this).selectAll("ellipse")
         .attr("cx", size / 2 + 0.5)
         .attr("cy", size / 2 + 0.5)
-        .attr("rx", i => (size - padding) * (i + 1) / 10)
-        .attr("ry", i => (size - padding) * (i + 1) / 10)
+        .attr("rx", j => (size - padding) * j / 10)
+        .attr("ry", j => (size - padding) * j / 10)
         .attr("stroke-opacity", 0.2)
-        .attr("stroke", "black");
+        .attr("stroke", "black")
+        .attr("clip-path", "url(#vector-field)");
+
+    // Direction indicator
+    d3.select(this).selectAll("rect")
+        .data(d3.range(10))
+        .join("svg:path");
+
+    d3.select(this).selectAll("path")
+        .attr("d", j => `M ${size / 2} ${size / 2 - (size - padding) * j / 10} z`)
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("stroke-linecap", "round")
+        .attr("marker-start", "url(#arrow)")
+        .attr("marker-end", "url(#arrow)")
+        .attr("clip-path", "url(#vector-field)");
 
     d3.select(this).selectAll("circle")
         .data(data)
@@ -114,7 +162,7 @@ svg.append("g")
     .selectAll("text")
     .data(columns)
     .join("text")
-    .attr("transform", (d, i) => `translate(${i * size},0)`)
+    .attr("transform", (d, i) => `translate(${i * size}, -10)`)
     .attr("x", padding)
     .attr("y", padding)
     .attr("dy", ".71em")
