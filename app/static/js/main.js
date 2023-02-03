@@ -100,7 +100,7 @@ const marker = defs.selectAll("marker")
     .attr("viewBox", "-5 -5 10 10")
     .append("svg:path")
     .attr("d", "M 0,0 m -5,-5 L 5,0 L -5,5 Z")
-    .attr("fill", "black");
+    .attr("fill", "grey");
 
 const clip = defs.selectAll("clip")
     .data(d3.range(1))
@@ -124,8 +124,8 @@ cell.each(function (i) {
         .attr("cy", size / 2 + 0.5)
         .attr("rx", j => (size - padding) * j / 10)
         .attr("ry", j => (size - padding) * j / 10)
-        .attr("stroke-opacity", 0.2)
-        .attr("stroke", "black")
+        .attr("stroke-opacity", j => 0.8 - j / 8)
+        .attr("stroke", "grey")
         .attr("clip-path", "url(#vector-field)");
 
     // Direction indicator
