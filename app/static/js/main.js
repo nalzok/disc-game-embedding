@@ -172,3 +172,37 @@ svg.property("value", [])
 
 const container = document.querySelector(".container")
 container.appendChild(svg.node());
+
+const svg1 = d3.create("svg")
+    .attr("viewBox", [-padding, 0, width, width]);
+const cell1 = svg1.append("g")
+    .selectAll("g")
+    .data(d3.range(firstN))
+    .join("g")
+    .attr("transform", (i) => `translate(${i * size}, 0)`);
+cell1.append("rect")
+    .attr("fill", "none")
+    .attr("stroke", "#aaa")
+    .attr("x", padding / 2 + 0.5)
+    .attr("y", padding / 2 + 0.5)
+    .attr("width", size - padding)
+    .attr("height", size - padding);
+const container1 = document.querySelector(".container1")
+container1.appendChild(svg1.node());
+
+const svg2 = d3.create("svg")
+    .attr("viewBox", [-padding, 0, width, width]);
+const cell2 = svg2.append("g")
+    .selectAll("g")
+    .data(d3.range(firstN))
+    .join("g")
+    .attr("transform", (i) => `translate(${i * size}, 0)`);
+cell2.append("rect")
+    .attr("fill", "none")
+    .attr("stroke", "#aaa")
+    .attr("x", padding / 2 + 0.5)
+    .attr("y", padding / 2 + 0.5)
+    .attr("width", size - padding)
+    .attr("height", size - padding);
+const container2 = document.querySelector(".container2")
+container2.appendChild(svg2.node());

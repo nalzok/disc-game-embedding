@@ -4,52 +4,62 @@
     <meta charset="UTF-8">
     <title>Disc Game Embedding</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css" integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+          integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
 </head>
 
 <body>
-    <div id="mySidebar" class="sidebar">
-        <div class="options">
-            <h1>Calculate Embedding</h1>
-            <form class="pure-form" action="{{ url_for('embed') }}" enctype="multipart/form-data" method="post">
-                <label for="features">Features</label>
-                <input type="file" id="features" name="features"/><br>
+<div id="mySidebar" class="sidebar">
+    <div class="options">
+        <h1>Calculate Embedding</h1>
+        <form class="pure-form" action="{{ url_for('embed') }}" enctype="multipart/form-data" method="post">
+            <label for="features">Features</label>
+            <input type="file" id="features" name="features"/><br>
 
-                <label for="payoff">Payoff</label>
-                <input type="file" id="payoff" name="payoff"/><br>
+            <label for="payoff">Payoff</label>
+            <input type="file" id="payoff" name="payoff"/><br>
 
-                <label for="scaling">Scaling scheme</label>
-                <select name="scaling" id="scaling">
-                    <option value="auto" {% if scaling == "auto" %} selected {% endif %}> Automatic</option>
-                    <option value="fixed" {% if scaling == "fixed" %} selected {% endif %}> Fixed</option>
-                </select>
+            <label for="scaling">Scaling scheme</label>
+            <select name="scaling" id="scaling">
+                <option value="auto" {% if scaling == "auto" %} selected {% endif %}> Automatic</option>
+                <option value="fixed" {% if scaling == "fixed" %} selected {% endif %}> Fixed</option>
+            </select>
 
-                <label for="color_by">Color by</label>
-                <select name="color_by" id="color_by">
-                    <option value="1" {% if color_by == "1" %} selected {% endif %}> Feature 1</option>
-                    <option value="2" {% if color_by == "2" %} selected {% endif %}> Feature 2</option>
-                    <option value="3" {% if color_by == "3" %} selected {% endif %}> Feature 3</option>
-                    <option value="4" {% if color_by == "4" %} selected {% endif %}> Feature 4</option>
-                    <option value="5" {% if color_by == "5" %} selected {% endif %}> Feature 5</option>
-                </select>
+            <label for="color_by">Color by</label>
+            <select name="color_by" id="color_by">
+                <option value="1" {% if color_by == "1" %} selected {% endif %}> Feature 1</option>
+                <option value="2" {% if color_by == "2" %} selected {% endif %}> Feature 2</option>
+                <option value="3" {% if color_by == "3" %} selected {% endif %}> Feature 3</option>
+                <option value="4" {% if color_by == "4" %} selected {% endif %}> Feature 4</option>
+                <option value="5" {% if color_by == "5" %} selected {% endif %}> Feature 5</option>
+            </select>
 
-                <input type="hidden" id="hexdigest" name="hexdigest" value="{{ hexdigest }}"/>
+            <input type="hidden" id="hexdigest" name="hexdigest" value="{{ hexdigest }}"/>
 
-                <input style="margin-top: 2em" class="pure-button pure-button-primary" type="submit" id="submit" value="Submit">
-            </form>
+            <input style="margin-top: 2em" class="pure-button pure-button-primary" type="submit" id="submit"
+                   value="Submit">
+        </form>
 
-            <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
-        </div>
+        <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
     </div>
-    <div id="main">
-        <button class="openbtn" onclick="openNav()">&#9776; Options</button>
-        <div class="container-outer">
-            <div class="container"></div>
-        </div>
+</div>
+<div id="main">
+    <button class="openbtn" onclick="openNav()">&#9776; Options</button>
+    <div class="container-outer">
+        <div class="container"></div>
     </div>
 
-    <script src="{{ url_for('static', filename='js/data.js') }}" type="module"></script>
-    <script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
-    <script src="{{ url_for('static', filename='js/nav.js') }}"></script>
+    <div class="container-outer">
+        <div class="container1"></div>
+    </div>
+
+    <div class="container-outer">
+        <div class="container2"></div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/data.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}" type="module"></script>
+<script src="{{ url_for('static', filename='js/nav.js') }}"></script>
 </body>
 </html>
