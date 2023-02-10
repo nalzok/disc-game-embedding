@@ -50,7 +50,7 @@ function brush(cell, circle, svg) {
             const [[x0, y0], [x1, y1]] = selection;
             const isSelected = d => x0 < x[i](d.embedding[2 * i]) && x1 > x[i](d.embedding[2 * i]) && y0 < y[i](d.embedding[2 * i + 1]) && y1 > y[i](d.embedding[2 * i + 1])
             selected = data.filter(isSelected);
-            circle.classed("hidden", d => !isSelected(d));
+            circle.classed("faded", d => !isSelected(d));
         }
         svg.property("value", selected).dispatch("input");
     }
@@ -59,7 +59,7 @@ function brush(cell, circle, svg) {
     function brushended({selection}) {
         if (selection) return;
         svg.property("value", []).dispatch("input");
-        circle.classed("hidden", false);
+        circle.classed("faded", false);
     }
 }
 
@@ -67,7 +67,7 @@ const svg = d3.create("svg")
     .attr("viewBox", [-padding, 0, width, width]);
 
 svg.append("style")
-    .text("circle.hidden { fill: #000; fill-opacity: 1; r: 1px; }");
+    .text("circle.faded { fill: #000; fill-opacity: 1; r: 1px; }");
 
 const cell = svg.append("g")
     .selectAll("g")
