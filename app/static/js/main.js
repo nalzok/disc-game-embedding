@@ -3,8 +3,8 @@ import * as d3 from "https://cdn.skypack.dev/d3@7";
 import {data} from "./data.js";
 
 // config
-const scaling = document.getElementById("scaling").value === "auto";
-const colorBy = parseInt(document.getElementById("color_by").value) - 1;
+const scaling = document.getElementById("scaling").value
+const colorBy = parseInt(document.getElementById("color_by").value) - 1
 const firstN = 6
 
 const padding = 28
@@ -12,13 +12,31 @@ const width = 954
 const columns = d3.range(firstN)
 const size = (width - (columns.length + 1) * padding) / columns.length + padding
 
-const x = columns.map(c => d3.scaleLinear()
-    .domain(d3.extent(data, d => d.embedding[(2 * c) * scaling]).map(x => 1.2 * x))
-    .rangeRound([padding / 2, size - padding / 2]))
+const x = scaling === "auto" ?
+    columns.map(c => d3.scaleLinear()
+        .domain(d3.extent(data, d => d.embedding[2 * c]).map(x => 1.2 * x))
+        .rangeRound([padding / 2, size - padding / 2])) :
+    columns.map(c => d3.scaleLinear()
+        .domain((() => {
+            const [lower, upper] = d3.extent(data, d => d.embedding[0]).map(x => 1.2 * x)
+            const magnitude = Math.max(Math.abs(lower), Math.abs(upper))
+            return [-magnitude, magnitude]
+        })())
+        .rangeRound([padding / 2, size - padding / 2]))
 
-const y = columns.map(c => d3.scaleLinear()
-    .domain(d3.extent(data, d => d.embedding[(2 * c + 1) * scaling]).map(x => 1.2 * x))
-    .rangeRound([size - padding / 2, padding / 2]))
+const y = scaling === "auto" ?
+    columns.map(c => d3.scaleLinear()
+        .domain(d3.extent(data, d => d.embedding[2 * c + 1]).map(x => 1.2 * x))
+        .rangeRound([size - padding / 2, padding / 2])) :
+    columns.map(c => d3.scaleLinear()
+        .domain((() => {
+            const [lower, upper] = d3.extent(data, d => d.embedding[0]).map(x => 1.2 * x)
+            const magnitude = Math.max(Math.abs(lower), Math.abs(upper))
+            return [-magnitude, magnitude]
+        })())
+        .rangeRound([size - padding / 2, padding / 2]))
+
+console.log(d3.extent(data, d => d.embedding[0]).map(x => 1.2 * x))
 
 const z = d3.scaleLinear()
     .domain(d3.extent(data, d => d.feature[colorBy]))
@@ -160,13 +178,13 @@ svg.append("g")
     .style("font", "bold 10px sans-serif")
     .style("pointer-events", "none")
     .selectAll("text")
-    .data(columns)
+    .data(data.map(d => d.eigen).filter((_, index) => index % 2 == 0))
     .join("text")
-    .attr("transform", (d, i) => `translate(${i * size}, -10)`)
+    .attr("transform", (d, i) => `translate(${i * size + 20}, -27)`)
     .attr("x", padding)
     .attr("y", padding)
     .attr("dy", ".71em")
-    .text(d => d);
+    .text((d, i) => `Disc ${i} (${d.toFixed(2)})`);
 
 svg.property("value", [])
 

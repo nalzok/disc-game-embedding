@@ -22,16 +22,27 @@ def index():
     hexdigest = request.args.get("hexdigest")
     scaling = request.args.get("scaling")
     color_by = request.args.get("color_by")
-    return render_template("index.html", hexdigest=hexdigest, scaling=scaling, color_by=color_by)
+    if hexdigest is None:
+        return render_template("index.html",
+                               hexdigest=hexdigest,
+                               scaling=scaling,
+                               color_by=color_by)
+    else:
+        dump = json.loads(datastore[hexdigest])
+        features_filename = dump["features_filename"]
+        payoff_filename = dump["payoff_filename"]
+        return render_template("index.html",
+                               hexdigest=hexdigest,
+                               scaling=scaling,
+                               color_by=color_by,
+                               features_filename=features_filename,
+                               payoff_filename=payoff_filename)
 
 
 @app.route('/api/v1/embed', methods=['GET', 'POST'])
 def embed():
     if request.method == "POST":
-        if request.files["features"] and request.files["payoff"]:
-            features = request.files["features"]
-            payoff = request.files["payoff"]
-
+        if (features := request.files["features"]) and (payoff := request.files["payoff"]):
             X = np.load(features)
             F = np.load(payoff)
             embedding, eigen = embed_algo(F)
@@ -42,6 +53,8 @@ def embed():
             hexdigest = m.hexdigest()
 
             result = {
+                "features_filename": features.filename,
+                "payoff_filename": payoff.filename,
                 "features": X,
                 "payoff": F,
                 "embedding": embedding,
@@ -61,4 +74,4 @@ def embed():
         return redirect(url_for("index", hexdigest=hexdigest, scaling=scaling, color_by=color_by))
 
     hexdigest = request.args.get("hexdigest")
-    return datastore[hexdigest]
+    return datastore.get(hexdigest) or ""

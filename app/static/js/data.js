@@ -8,4 +8,5 @@ const eigen = dump["eigen"];
 export const data = Array.from(eigen).map((_, i) => ({
     feature: X[i],
     embedding: E[i],
+    eigen: eigen[i],
 }));
