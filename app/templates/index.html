@@ -44,7 +44,7 @@
 	        </select><br>
 
             <label for="color_by">Color by (feature index)</label><br>
-            <input type="text" id="color_by" name="color_by" value="{{ color_by }}"></input><br>
+            <input type="text" id="color_by" name="color_by" value="{{ color_by or 1 }}"></input><br>
 
             <input type="hidden" id="hexdigest" name="hexdigest" value="{{ hexdigest }}"/>
 
