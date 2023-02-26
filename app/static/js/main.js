@@ -36,8 +36,6 @@ const y = scaling === "auto" ?
         })())
         .rangeRound([size - padding / 2, padding / 2]))
 
-console.log(d3.extent(data, d => d.embedding[0]).map(x => 1.2 * x))
-
 const z = d3.scaleLinear()
     .domain(d3.extent(data, d => d.feature[colorBy]))
     .range(["lightblue", "blue"])

@@ -12,6 +12,7 @@
 <div id="mySidebar" class="sidebar">
     <div class="options">
         <h1>Calculate Embedding</h1>
+        <form action="/" id="escape-hatch"></form>
         <form class="pure-form" action="{{ url_for('embed') }}" enctype="multipart/form-data" method="post">
             <label for="features">
                 {% if features_filename is defined %}
@@ -20,7 +21,7 @@
                     Click to upload features matrix
                 {% endif %}
             </label>
-	    <input id="features" name="features" type="file" {% if payoff_filename is defined %}style="visibility:hidden"{% endif %}/><br>
+	        <input id="features" name="features" type="file" {% if payoff_filename is defined %}style="visibility:hidden"{% endif %}/><br>
 
             <label for="payoff">
                 {% if payoff_filename is defined %}
@@ -29,24 +30,21 @@
                     Click to upload payoff matrix
                 {% endif %}
             </label>
-	    <input id="payoff" name="payoff" type="file" {% if payoff_filename is defined %}style="visibility:hidden"{% endif %}/><br>
+            <input id="payoff" name="payoff" type="file" {% if payoff_filename is defined %}style="visibility:hidden"{% endif %}/><br>
 
-	    <hr>
+            <input style="margin-top: 2em" class="pure-button pure-button-primary" type="submit" id="reset" form="escape-hatch"
+               value="Reset">
+
+	        <hr>
 
             <label for="scaling">Scaling scheme</label><br>
             <select name="scaling" id="scaling">
                 <option value="auto" {% if scaling == "auto" %} selected {% endif %}> Automatic</option>
                 <option value="fixed" {% if scaling == "fixed" %} selected {% endif %}> Fixed</option>
-	    </select><br>
+	        </select><br>
 
-            <label for="color_by">Color by</label><br>
-            <select name="color_by" id="color_by">
-                <option value="1" {% if color_by == "1" %} selected {% endif %}> Feature 1</option>
-                <option value="2" {% if color_by == "2" %} selected {% endif %}> Feature 2</option>
-                <option value="3" {% if color_by == "3" %} selected {% endif %}> Feature 3</option>
-                <option value="4" {% if color_by == "4" %} selected {% endif %}> Feature 4</option>
-                <option value="5" {% if color_by == "5" %} selected {% endif %}> Feature 5</option>
-	    </select><br>
+            <label for="color_by">Color by (feature index)</label><br>
+            <input type="text" id="color_by" name="color_by" value="{{ color_by }}"></input><br>
 
             <input type="hidden" id="hexdigest" name="hexdigest" value="{{ hexdigest }}"/>
 

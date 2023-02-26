@@ -1,4 +1,7 @@
-.PHONY: test embed serve
+.PHONY: serve test embed
+
+serve:
+	FLASK_APP=visualizer.py FLASK_ENV=development FLASK_DEBUG=1 pipenv run flask run
 
 test:
 	pipenv run python3 -m test.test_empr
@@ -31,6 +34,3 @@ embed:
 	# 		--embedding "data/AxisAndAllies/E_3_[0, 0, 0]_75_$$id.npy" \
 	# 		--eigen "data/AxisAndAllies/eigen_3_[0, 0, 0]_75_$$id.npy"; \
 	# done
-
-serve:
-	FLASK_APP=visualizer.py pipenv run flask run
