@@ -40,6 +40,8 @@ const z = d3.scaleLinear()
     .domain(d3.extent(data, d => d.feature[colorBy]))
     .range(["lightblue", "blue"])
 
+console.log(data)
+
 function brush(cell, circle, svg) {
     const brush = d3.brush()
         .extent([[padding / 2, padding / 2], [size - padding / 2, size - padding / 2]])
