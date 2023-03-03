@@ -4,9 +4,10 @@ const X = dump["features"];
 const F = dump["payoff"];
 const E = dump["embedding"];
 const eigen = dump["eigen"];
-
-export const data = Array.from(eigen).map((_, i) => ({
+const data = Array.from(eigen).map((_, i) => ({
     feature: X[i],
     embedding: E[i],
     eigen: eigen[i],
 }));
+
+export { dump, data }
