@@ -1,14 +1,8 @@
 "use strict";
 import * as d3 from "https://cdn.skypack.dev/d3@7";
+import {scaling, colorBy, firstN, padding, width} from "./config.js";
 import {data} from "./data.js";
 
-// config
-const scaling = document.getElementById("scaling").value
-const colorBy = parseInt(document.getElementById("color_by").value) - 1
-const firstN = 6
-
-const padding = 28
-const width = 954
 const columns = d3.range(firstN)
 const size = (width - (columns.length + 1) * padding) / columns.length + padding
 
@@ -39,8 +33,6 @@ const y = scaling === "auto" ?
 const z = d3.scaleLinear()
     .domain(d3.extent(data, d => d.feature[colorBy]))
     .range(["lightblue", "blue"])
-
-console.log(data)
 
 function brush(cell, circle, svg) {
     const brush = d3.brush()
