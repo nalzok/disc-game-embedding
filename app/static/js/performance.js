@@ -1,22 +1,24 @@
 "use strict";
-import * as d3 from "https:/cdn.skypack.dev/d3@7";
-import {scaling, colorBy, firstN, padding, width} from "./config.js";
+import * as d3 from "https://cdn.skypack.dev/d3@7";
+import {colorBy, firstN, padding, width} from "./config.js";
 import {dump, data} from "./data.js";
 
 const columns = d3.range(firstN)
 const size = (width - (columns.length + 1) * padding) / columns.length + padding
 
-const N = Math.floor(dump["eigen"].length / 50)
+const N = Math.floor(dump["eigen"].length / 5)
 const payoffs = columns.map(c => data.map(d1 => data.map(d2 => d1.embedding[2*c] * d2.embedding[2*c+1] - d2.embedding[2*c] * d1.embedding[2*c+1]))) 
 
-// `recovered` should be similar to `dump["payoff"]`
-// const recovered = payoffs.reduce((a, b) => a.map((row, i) => row.map((col, j) => col + b[i][j])))
+const feature_in_interest = data.map(d => d.feature[colorBy])
+const sorted_index = Array.from(Array(feature_in_interest.length).keys())
+  .sort((a, b) => feature_in_interest[a] < feature_in_interest[b] ? -1 : (feature_in_interest[b] < feature_in_interest[a]) | 0)
+const payoffs_flat = columns.map(c => d3.range(N * N).map(ij => payoffs[c][sorted_index[Math.floor(ij / N)]][sorted_index[ij % N]]))
 
-const x = columns.map(c => d3.scaleBand().domain([0, N - 1]).padding(0.05))
-const y = columns.map(c => d3.scaleBand().domain([0, N - 1]).padding(0.05))
+const x = columns.map(c => d3.scaleLinear().domain([0, N - 1]).rangeRound([padding / 2, size - padding / 2]))
+const y = columns.map(c => d3.scaleLinear().domain([0, N - 1]).rangeRound([padding / 2, size - padding / 2]))
 const z = columns.map(c => d3.scaleLinear()
-    .domain(d3.extent(payoffs[c]))
-    .range(["lightblue", "blue"]))
+    .domain(d3.extent(payoffs_flat[c]))
+    .range(["black", "white"]))
 
 const svg = d3.create("svg")
     .attr("viewBox", [-padding, 0, width, width]);
@@ -35,19 +37,15 @@ cell.append("rect")
     .attr("width", size - padding)
     .attr("height", size - padding);
 
-cell.each(
-    c => d3.select(this).selectAll("circle")
-    	.data(d3.range(N * N).map(ij => payoffs[c][Math.floor(ij / N)][ij % N]))
+cell.each(function (c) {
+    d3.select(this).selectAll("circle")
+        .data(payoffs_flat[c])
         .join("circle")
         .attr("cx", (_, ij) => x[c](Math.floor(ij / N)))
         .attr("cy", (_, ij) => y[c](ij % N))
-        .attr("r", 3.5)
-        .style("fill", z[c])
-        .style("opacity", 0.8))
-
-const circle = cell.selectAll("circle");
-
-cell.call(x => x, circle, svg);
+        .attr("r", 0.8)
+        .attr("fill", z[c]);
+});
 
 svg.property("value", [])
 
