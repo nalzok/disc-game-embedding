@@ -48,6 +48,16 @@
 
             <input type="hidden" id="hexdigest" name="hexdigest" value="{{ hexdigest }}"/>
 
+            <br>
+            <hr>
+
+            <h1><label for="color_by">Number of Panels</label></h1>
+            <select name="fix" id="fix" onchange='checkfix(this.value);'>
+              <option disabled selected value> -- select an option -- </option>              
+              <option value="1" {% if color_by == "yes" %} selected {% endif %}> By entering number of panels</option>
+                <option value="2" {% if color_by == "no" %} selected {% endif %}> By recovery accuracy</option>
+            </select>
+
             <input style="margin-top: 2em" class="pure-button pure-button-primary" type="submit" id="submit"
                    value="Submit">
         </form>

@@ -1,10 +1,14 @@
 "use strict";
 import * as d3 from "https://cdn.skypack.dev/d3@7";
-import {scaling, colorBy, firstN, padding, width} from "./config.js";
+import {scaling, colorBy, firstN, padding} from "./config.js";
 import {data} from "./data.js";
 
+const w = window.innerWidth
+const h = window.innerHeight
+const width = 1.25 * w
+const size = 0.28 * h
+
 const columns = d3.range(firstN)
-const size = (width - (columns.length + 1) * padding) / columns.length + padding
 
 const x = scaling === "auto" ?
     columns.map(c => d3.scaleLinear()
